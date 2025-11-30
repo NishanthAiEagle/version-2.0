@@ -4,56 +4,78 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Jewels Try-On</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel&family=Poppins&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-  <!-- CAMERA + CANVAS -->
+  <!-- CAMERA & CANVAS -->
   <video id="webcam" autoplay muted playsinline></video>
   <canvas id="overlay"></canvas>
 
-  <!-- LOGO -->
+  <!-- TOP LEFT LOGO -->
   <div id="branding">
-    <img src="logo.png" class="logo-icon" />
+    <img src="logo.png" class="logo-icon" alt="Brand Logo" />
   </div>
 
-  <!-- CAMERA + LOCATION BUTTONS -->
+  <!-- TOP RIGHT BUTTONS -->
   <div class="ui-buttons">
     <button id="capture-btn" title="Take Photo">
-      <img src="camera-icon.png" />
+      <img src="camera-icon.png" alt="Camera" />
     </button>
 
-    <a href="https://maps.app.goo.gl/gsTuBCVMUVk9cxYZ6" target="_blank" title="Location">
-      <img src="location_icon.png" />
+    <a href="https://maps.app.goo.gl/gsTuBCVMUVk9cxYZ6"
+       target="_blank"
+       title="Location">
+      <img src="location_icon.png" alt="Location" />
     </a>
   </div>
 
-  <!-- CATEGORY + TRY ALL -->
+  <!-- MAIN CATEGORY BUTTONS -->
   <div id="jewelry-mode">
     <button onclick="toggleCategory('earrings')">EARRINGS</button>
     <button onclick="toggleCategory('necklaces')">CHAINS</button>
     <button id="auto-try-btn">TRY ALL</button>
   </div>
 
-  <!-- SUB CATEGORY -->
+  <!-- SUB CATEGORY (FILTERED BASED ON CATEGORY SELECTION) -->
   <div id="subcategory-buttons" style="display: none;">
-    <button onclick="selectJewelryType('earrings','gold')">Gold Earrings</button>
-    <button onclick="selectJewelryType('earrings','diamond')">Diamond Earrings</button>
-    <button onclick="selectJewelryType('necklaces','gold')">Gold Chains</button>
-    <button onclick="selectJewelryType('necklaces','diamond')">Diamond Chains</button>
+    
+    <!-- EARRINGS -->
+    <button data-category="earrings"
+            onclick="selectJewelryType('earrings','gold')">
+      Gold Earrings
+    </button>
+
+    <button data-category="earrings"
+            onclick="selectJewelryType('earrings','diamond')">
+      Diamond Earrings
+    </button>
+
+    <!-- CHAINS -->
+    <button data-category="necklaces"
+            onclick="selectJewelryType('necklaces','gold')">
+      Gold Chains
+    </button>
+
+    <button data-category="necklaces"
+            onclick="selectJewelryType('necklaces','diamond')">
+      Diamond Chains
+    </button>
+
   </div>
 
-  <!-- JEWELRY SCROLL LIST -->
+  <!-- JEWELRY IMAGE STRIP -->
   <div id="jewelry-options" class="options-group" style="display:none;"></div>
 
-  <!-- SNAPSHOT MODAL (single photo) -->
+  <!-- SNAPSHOT PREVIEW MODAL -->
   <div id="snapshot-modal">
     <div class="modal-content">
       <span id="close-snapshot" class="close-btn">&times;</span>
       <h3>Your Look</h3>
-      <img id="snapshot-preview" />
+      <img id="snapshot-preview" alt="Snapshot preview" />
+
       <div class="action-buttons">
         <button id="download-btn">Download</button>
         <button id="share-btn">Share</button>
@@ -61,28 +83,23 @@
     </div>
   </div>
 
-  <!-- GALLERY MODAL (after TRY ALL) -->
+  <!-- GALLERY POPUP AFTER TRY ALL -->
   <div id="gallery-modal">
     <div class="gallery-content">
-      <span id="close-gallery" class="close-btn">&times;</span>
+      <span id="gallery-close" class="close-btn">&times;</span>
       <h3>Your Looks Gallery</h3>
 
-      <!-- Big selected image -->
-      <img id="gallery-main-preview" />
+      <!-- LARGE IMAGE -->
+      <img id="gallery-main" src="" alt="" />
 
-      <!-- Thumbnails -->
+      <!-- THUMBNAIL STRIP -->
       <div id="gallery-thumbs"></div>
 
-      <!-- NEW: Story Reel section -->
-      <div class="reel-controls">
-        <button id="create-reel-btn" class="primary-btn">Create Story Reel 🎬</button>
-      </div>
+      <!-- WHATSAPP SHARE BUTTON -->
+      <button id="whatsapp-share-btn" class="whatsapp-btn">
+        📲 Share via WhatsApp
+      </button>
 
-      <div id="reel-section" style="display:none;">
-        <p class="reel-title">Reel Preview</p>
-        <video id="reel-video" controls playsinline></video>
-        <button id="download-reel-btn" class="primary-btn">Download Reel</button>
-      </div>
     </div>
   </div>
 
@@ -90,7 +107,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 
-  <!-- Main Script -->
+  <!-- Main JS -->
   <script src="script.js"></script>
 
 </body>
