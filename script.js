@@ -38,6 +38,9 @@ const galleryThumbs = document.getElementById('gallery-thumbs');
 const galleryClose = document.getElementById('gallery-close');
 const whatsappShareBtn = document.getElementById('whatsapp-share-btn');
 
+// Resolution box
+const resolutionBox = document.getElementById('resolution-box');
+
 /* ===========================================
    1. LOCAL FILES CONFIG – matches your folders
 =========================================== */
@@ -92,10 +95,43 @@ function buildSrc(typeKey, filename) {
 /* ===========================================
    2. LOAD JEWELRY FROM LOCAL FOLDERS
 =========================================== */
+
+function showResolutionInfo(img, path) {
+  if (!resolutionBox) return;
+
+  const w = img.width;
+  const h = img.height;
+  const maxSide = Math.max(w, h);
+
+  let label, bg, border;
+
+  if (maxSide >= 900) {
+    label = 'HQ';
+    bg = 'rgba(46, 204, 113, 0.9)';   // green
+    border = '#2ecc71';
+  } else if (maxSide >= 500) {
+    label = 'OK';
+    bg = 'rgba(241, 196, 15, 0.9)';   // yellow
+    border = '#f1c40f';
+  } else {
+    label = 'LOW';
+    bg = 'rgba(231, 76, 60, 0.9)';    // red
+    border = '#e74c3c';
+  }
+
+  resolutionBox.style.display = 'block';
+  resolutionBox.style.background = bg;
+  resolutionBox.style.borderColor = border;
+  resolutionBox.textContent = `📐 ${w} × ${h}px · ${label}`;
+}
+
 function loadImage(src) {
   return new Promise((resolve) => {
     const img = new Image();
-    img.onload = () => resolve(img);
+    img.onload = () => {
+      showResolutionInfo(img, src);
+      resolve(img);
+    };
     img.onerror = () => {
       console.warn('Image failed:', src);
       resolve(null);
@@ -116,15 +152,12 @@ async function changeJewelry(typeKey, src) {
    3. CATEGORY + SUBCATEGORY HANDLING
 =========================================== */
 
-// Show only sub-buttons for selected category
 function toggleCategory(category) {
   stopAutoTry();
   currentCategory = category;
 
-  // hide product strip until sub-type chosen
   jewelryOptions.style.display = 'none';
 
-  // filter the yellow buttons
   const allSubButtons = document.querySelectorAll('#subcategory-buttons button');
   allSubButtons.forEach(btn => {
     const btnCat = btn.dataset.category;
@@ -146,7 +179,6 @@ function selectJewelryType(category, metal) {
   insertJewelryOptions(typeKey);
 }
 
-// expose to HTML
 window.toggleCategory = toggleCategory;
 window.selectJewelryType = selectJewelryType;
 
@@ -248,7 +280,7 @@ function drawJewelry(face, ctx) {
   smoothedFacePoints.right = smoothPoint(smoothedFacePoints.right, rightPos);
 
   if (earringImg) {
-    const w = eyeDist * 0.42;
+    const w = eyeDist * 0.32;   // slightly smaller to reduce blur
     const h = w * (earringImg.height / earringImg.width);
 
     context.drawImage(
@@ -388,13 +420,9 @@ async function runAutoTryAll() {
     const filename = files[autoTryIndex];
     const src = buildSrc(currentTypeKey, filename);
 
-    // 1) change jewelry
     await changeJewelry(currentTypeKey, src);
-
-    // 2) wait for face + overlay to settle
     await new Promise(res => setTimeout(res, 1200));
 
-    // 3) capture snapshot
     const dataURL = captureCurrentFrameDataURL();
     autoSnapshots.push(dataURL);
 
@@ -477,7 +505,7 @@ function shareGalleryViaWhatsApp() {
   }
 
   const message = encodeURIComponent(
-    'Hi! These are your jewelry try-on looks from Overlay Jewels.\n\n' +
+    'Hi! These are your jewelry try-on looks from Jewels-Ai.\n\n' +
     'We will now share the photos from our WhatsApp number: +917019743880.\n\n' +
     '— Overlay Jewels'
   );

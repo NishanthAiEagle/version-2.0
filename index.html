@@ -39,9 +39,8 @@
     <button id="auto-try-btn">TRY ALL</button>
   </div>
 
-  <!-- SUB CATEGORY (FILTERED BASED ON CATEGORY SELECTION) -->
+  <!-- SUB CATEGORY (FILTERED) -->
   <div id="subcategory-buttons" style="display: none;">
-    
     <!-- EARRINGS -->
     <button data-category="earrings"
             onclick="selectJewelryType('earrings','gold')">
@@ -63,11 +62,13 @@
             onclick="selectJewelryType('necklaces','diamond')">
       Diamond Chains
     </button>
-
   </div>
 
-  <!-- JEWELRY IMAGE STRIP -->
+  <!-- JEWELLERY OPTIONS STRIP -->
   <div id="jewelry-options" class="options-group" style="display:none;"></div>
+
+  <!-- RESOLUTION INFO BOX -->
+  <div id="resolution-box"></div>
 
   <!-- SNAPSHOT PREVIEW MODAL -->
   <div id="snapshot-modal">
@@ -99,7 +100,6 @@
       <button id="whatsapp-share-btn" class="whatsapp-btn">
         📲 Share via WhatsApp
       </button>
-
     </div>
   </div>
 
