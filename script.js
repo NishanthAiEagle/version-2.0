@@ -46,7 +46,6 @@ const resolutionBox = document.getElementById('resolution-box');
 =========================================== */
 
 const LOCAL_IMAGES = {
-  // diamond_earrings/diamond_earrings1.png ... 9
   diamond_earrings: [
     'diamond_earrings1.png',
     'diamond_earrings2.png',
@@ -58,8 +57,6 @@ const LOCAL_IMAGES = {
     'diamond_earrings8.png',
     'diamond_earrings9.png'
   ],
-
-  // diamond_necklaces/diamond_necklaces1.png ... 6
   diamond_necklaces: [
     'diamond_necklaces1.png',
     'diamond_necklaces2.png',
@@ -68,8 +65,6 @@ const LOCAL_IMAGES = {
     'diamond_necklaces5.png',
     'diamond_necklaces6.png'
   ],
-
-  // gold_earrings/earring16.png + gold_earrings1.png ... 7
   gold_earrings: [
     'earring16.png',
     'gold_earrings1.png',
@@ -80,11 +75,8 @@ const LOCAL_IMAGES = {
     'gold_earrings6.png',
     'gold_earrings7.png'
   ],
-
-  // gold_necklaces folder – fill later once you add files
   gold_necklaces: [
-    // 'gold_necklaces1.png',
-    // 'gold_necklaces2.png'
+    // add files when ready
   ]
 };
 
@@ -93,29 +85,27 @@ function buildSrc(typeKey, filename) {
 }
 
 /* ===========================================
-   2. LOAD JEWELRY FROM LOCAL FOLDERS
+   2. LOAD JEWELRY + SHOW RESOLUTION QUALITY
 =========================================== */
 
-function showResolutionInfo(img, path) {
+function showResolutionInfo(img) {
   if (!resolutionBox) return;
-
   const w = img.width;
   const h = img.height;
   const maxSide = Math.max(w, h);
 
   let label, bg, border;
-
   if (maxSide >= 900) {
     label = 'HQ';
-    bg = 'rgba(46, 204, 113, 0.9)';   // green
+    bg = 'rgba(46, 204, 113, 0.9)';
     border = '#2ecc71';
   } else if (maxSide >= 500) {
     label = 'OK';
-    bg = 'rgba(241, 196, 15, 0.9)';   // yellow
+    bg = 'rgba(241, 196, 15, 0.9)';
     border = '#f1c40f';
   } else {
     label = 'LOW';
-    bg = 'rgba(231, 76, 60, 0.9)';    // red
+    bg = 'rgba(231, 76, 60, 0.9)';
     border = '#e74c3c';
   }
 
@@ -129,7 +119,7 @@ function loadImage(src) {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
-      showResolutionInfo(img, src);
+      showResolutionInfo(img);
       resolve(img);
     };
     img.onerror = () => {
@@ -182,7 +172,6 @@ function selectJewelryType(category, metal) {
 window.toggleCategory = toggleCategory;
 window.selectJewelryType = selectJewelryType;
 
-// Build thumbnail list for selected type
 function insertJewelryOptions(typeKey) {
   jewelryOptions.innerHTML = '';
   const files = LOCAL_IMAGES[typeKey] || [];
@@ -235,7 +224,6 @@ faceMesh.onResults(results => {
   }
 });
 
-// Start camera
 document.addEventListener('DOMContentLoaded', () => startCamera());
 
 function startCamera(facingMode = 'user') {
@@ -255,33 +243,39 @@ videoElement.onloadedmetadata = () => {
 };
 
 /* ===========================================
-   5. DRAW JEWELRY
+   5. DRAW JEWELRY – same style as old project
 =========================================== */
 
 function drawJewelry(face, ctx) {
   if (!face) return;
   const context = ctx || canvasCtx;
 
-  const vw = canvasElement.width;
-  const vh = canvasElement.height;
+  const cw = canvasElement.width;
+  const ch = canvasElement.height;
 
-  const L = face[33];
-  const R = face[263];
-  const eyeDist = Math.hypot((R.x - L.x) * vw, (R.y - L.y) * vh);
+  const earringScale  = 0.07;
+  const necklaceScale = 0.18;
 
-  // Earrings
-  const le = face[132];
-  const re = face[361];
+  const leftEarRaw = {
+    x: face[132].x * cw - 6,
+    y: face[132].y * ch - 16
+  };
+  const rightEarRaw = {
+    x: face[361].x * cw + 6,
+    y: face[361].y * ch - 16
+  };
+  const neckRaw = {
+    x: face[152].x * cw - 8,
+    y: face[152].y * ch + 10
+  };
 
-  const leftPos = { x: le.x * vw, y: le.y * vh };
-  const rightPos = { x: re.x * vw, y: re.y * vh };
-
-  smoothedFacePoints.left = smoothPoint(smoothedFacePoints.left, leftPos);
-  smoothedFacePoints.right = smoothPoint(smoothedFacePoints.right, rightPos);
+  smoothedFacePoints.left  = smoothPoint(smoothedFacePoints.left,  leftEarRaw);
+  smoothedFacePoints.right = smoothPoint(smoothedFacePoints.right, rightEarRaw);
+  smoothedFacePoints.neck  = smoothPoint(smoothedFacePoints.neck,  neckRaw);
 
   if (earringImg) {
-    const w = eyeDist * 0.32;   // slightly smaller to reduce blur
-    const h = w * (earringImg.height / earringImg.width);
+    const w = earringImg.width  * earringScale;
+    const h = earringImg.height * earringScale;
 
     context.drawImage(
       earringImg,
@@ -299,20 +293,14 @@ function drawJewelry(face, ctx) {
     );
   }
 
-  // Necklace
-  const neck = face[152];
-  const neckPos = { x: neck.x * vw, y: neck.y * vh };
-  smoothedFacePoints.neck = smoothPoint(smoothedFacePoints.neck, neckPos);
-
   if (necklaceImg) {
-    const w = eyeDist * 1.6;
-    const h = w * (necklaceImg.height / necklaceImg.width);
-    const offset = eyeDist * 1.0;
+    const w = necklaceImg.width  * necklaceScale;
+    const h = necklaceImg.height * necklaceScale;
 
     context.drawImage(
       necklaceImg,
       smoothedFacePoints.neck.x - w / 2,
-      smoothedFacePoints.neck.y + offset,
+      smoothedFacePoints.neck.y,
       w,
       h
     );
@@ -328,7 +316,7 @@ function smoothPoint(prev, curr, factor = 0.4) {
 }
 
 /* ===========================================
-   6. CAPTURE CURRENT FRAME (FOR SNAPSHOT / GALLERY)
+   6. SNAPSHOT HELPERS
 =========================================== */
 
 function captureCurrentFrameDataURL() {
@@ -341,13 +329,8 @@ function captureCurrentFrameDataURL() {
   if (smoothedFaceLandmarks) {
     drawJewelry(smoothedFaceLandmarks, ctx);
   }
-
   return snapCanvas.toDataURL('image/png');
 }
-
-/* ===========================================
-   7. MANUAL SNAPSHOT (TOP CAMERA BUTTON)
-=========================================== */
 
 function takeSnapshot() {
   lastSnapshotDataURL = captureCurrentFrameDataURL();
@@ -383,7 +366,7 @@ downloadBtn.addEventListener('click', downloadSnapshot);
 shareBtn.addEventListener('click', shareSnapshot);
 
 /* ===========================================
-   8. TRY ALL + AUTO SCREENSHOT + GALLERY
+   7. TRY ALL + GALLERY
 =========================================== */
 
 function stopAutoTry() {
@@ -446,8 +429,6 @@ function toggleAutoTry() {
 
 autoTryBtn.addEventListener('click', toggleAutoTry);
 
-/* GALLERY */
-
 function openGallery() {
   if (!autoSnapshots.length) {
     alert('No snapshots captured.');
@@ -484,7 +465,7 @@ function closeGallery() {
 galleryClose.addEventListener('click', closeGallery);
 
 /* ===========================================
-   9. WHATSAPP SHARE FROM GALLERY
+   8. WHATSAPP SHARE FROM GALLERY
 =========================================== */
 
 function shareGalleryViaWhatsApp() {
@@ -505,7 +486,7 @@ function shareGalleryViaWhatsApp() {
   }
 
   const message = encodeURIComponent(
-    'Hi! These are your jewelry try-on looks from Jewels-Ai.\n\n' +
+    'Hi! These are your jewelry try-on looks from Overlay Jewels.\n\n' +
     'We will now share the photos from our WhatsApp number: +917019743880.\n\n' +
     '— Overlay Jewels'
   );
