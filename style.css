@@ -308,7 +308,7 @@ body {
   gap: 6px;
   max-height: 150px;
   overflow-y: auto;
-  justify-content: center;
+  justify-content:center;
   margin-bottom: 10px;
 }
 
@@ -339,13 +339,6 @@ body {
   color: #fff;
   cursor: pointer;
   font-size: 14px;
-}
-
-/* WhatsApp style button */
-.gallery-buttons .whatsapp-btn {
-  background: #25D366;
-  color: #000;
-  font-weight: 600;
 }
 
 /* Responsive tweaks */
