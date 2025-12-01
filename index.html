@@ -2,113 +2,104 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Jewels Try-On</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <title>Overlay Jewels Try-On</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
+  <!-- Main container -->
+  <div id="app">
+    <!-- Logo -->
+    <div id="logo">
+      <img src="logo.png" alt="Brand Logo" />
+    </div>
 
-  <!-- CAMERA & CANVAS -->
-  <video id="webcam" autoplay muted playsinline></video>
-  <canvas id="overlay"></canvas>
+    <!-- Video + Canvas -->
+    <div id="video-container">
+      <video id="webcam" autoplay playsinline></video>
+      <canvas id="overlay"></canvas>
+    </div>
 
-  <!-- TOP LEFT LOGO -->
-  <div id="branding">
-    <img src="logo.png" class="logo-icon" alt="Brand Logo" />
-  </div>
+    <!-- Jewelry Category Buttons -->
+    <div id="jewelry-mode">
+      <button onclick="toggleCategory('gold')">Gold</button>
+      <button onclick="toggleCategory('diamond')">Diamond</button>
+      <!-- TRY ALL BUTTON -->
+      <button id="tryall-btn" onclick="toggleTryAll()">Try All</button>
+    </div>
 
-  <!-- TOP RIGHT BUTTONS -->
-  <div class="ui-buttons">
-    <button id="capture-btn" title="Take Photo">
-      <img src="camera-icon.png" alt="Camera" />
+    <!-- Subcategory Buttons -->
+    <div id="subcategory-buttons" style="display: none;">
+      <button onclick="selectJewelryType('gold_earrings')">Gold Earrings</button>
+      <button onclick="selectJewelryType('gold_necklaces')">Gold Necklaces</button>
+      <button onclick="selectJewelryType('diamond_earrings')">Diamond Earrings</button>
+      <button onclick="selectJewelryType('diamond_necklaces')">Diamond Necklaces</button>
+    </div>
+
+    <!-- Jewelry Thumbnails -->
+    <div id="jewelry-options" class="options-group" style="display: none;"></div>
+
+    <!-- Snapshot Button (single photo) -->
+    <button id="snapshot-btn" onclick="takeSnapshot()">
+      <img src="camera-icon.png" alt="Snapshot" />
     </button>
 
-    <a href="https://maps.app.goo.gl/gsTuBCVMUVk9cxYZ6"
-       target="_blank"
-       title="Location">
-      <img src="location_icon.png" alt="Location" />
+    <!-- Info Button -->
+    <button id="info-btn" onclick="toggleInfoModal()">ℹ️</button>
+
+    <!-- Location Button -->
+    <a id="location-btn"
+       href="https://www.google.com/maps/place/50,+VP+St,+Vannarpet,+Coonoor,+Tamil+Nadu+643101"
+       target="_blank" rel="noopener noreferrer">
+      <img src="location_icon.png" alt="Location Icon" style="width: 40px; height: 40px;" />
     </a>
   </div>
 
-  <!-- MAIN CATEGORY BUTTONS -->
-  <div id="jewelry-mode">
-    <button onclick="toggleCategory('earrings')">EARRINGS</button>
-    <button onclick="toggleCategory('necklaces')">CHAINS</button>
-    <button id="auto-try-btn">TRY ALL</button>
+  <!-- Info Modal -->
+  <div id="info-modal">
+    <h3>How to Use the Try-On App</h3>
+    <div class="info-content">
+      <ul>
+        <li>Allow camera access when prompted.</li>
+        <li>Select Gold / Diamond and choose earrings or chains.</li>
+        <li>Tap a design to see it live on your face.</li>
+        <li>Use the camera icon for a single photo.</li>
+        <li>Use “Try All” to auto-change and auto-capture looks.</li>
+      </ul>
+      <button class="close-btn" onclick="toggleInfoModal()">Got it!</button>
+    </div>
   </div>
 
-  <!-- SUB CATEGORY (FILTERED) -->
-  <div id="subcategory-buttons" style="display: none;">
-    <!-- EARRINGS -->
-    <button data-category="earrings"
-            onclick="selectJewelryType('earrings','gold')">
-      Gold Earrings
-    </button>
+  <!-- FLASH overlay for photo effect -->
+  <div id="flash-overlay"></div>
 
-    <button data-category="earrings"
-            onclick="selectJewelryType('earrings','diamond')">
-      Diamond Earrings
-    </button>
-
-    <!-- CHAINS -->
-    <button data-category="necklaces"
-            onclick="selectJewelryType('necklaces','gold')">
-      Gold Chains
-    </button>
-
-    <button data-category="necklaces"
-            onclick="selectJewelryType('necklaces','diamond')">
-      Diamond Chains
-    </button>
-  </div>
-
-  <!-- JEWELLERY OPTIONS STRIP -->
-  <div id="jewelry-options" class="options-group" style="display:none;"></div>
-
-  <!-- RESOLUTION INFO BOX -->
-  <div id="resolution-box"></div>
-
-  <!-- SNAPSHOT PREVIEW MODAL -->
+  <!-- Snapshot Modal (single capture) -->
   <div id="snapshot-modal">
-    <div class="modal-content">
-      <span id="close-snapshot" class="close-btn">&times;</span>
-      <h3>Your Look</h3>
-      <img id="snapshot-preview" alt="Snapshot preview" />
+    <img id="snapshot-preview" alt="Snapshot preview" />
+    <div class="snapshot-buttons">
+      <button onclick="saveSnapshot()">Download</button>
+      <button onclick="shareSnapshot()">Share</button>
+      <button onclick="closeSnapshotModal()">Close</button>
+    </div>
+  </div>
 
-      <div class="action-buttons">
-        <button id="download-btn">Download</button>
-        <button id="share-btn">Share</button>
+  <!-- Gallery Modal (after TRY ALL) -->
+  <div id="gallery-modal">
+    <div class="gallery-content">
+      <button id="gallery-close">&times;</button>
+      <h2>Your Looks Gallery</h2>
+      <img id="gallery-main" src="" alt="Selected look" />
+      <div id="gallery-thumbs"></div>
+      <div class="gallery-buttons">
+        <button onclick="downloadCurrentFromGallery()">Download</button>
+        <button class="whatsapp-btn" onclick="shareCurrentToWhatsApp()">WhatsApp</button>
       </div>
     </div>
   </div>
 
-  <!-- GALLERY POPUP AFTER TRY ALL -->
-  <div id="gallery-modal">
-    <div class="gallery-content">
-      <span id="gallery-close" class="close-btn">&times;</span>
-      <h3>Your Looks Gallery</h3>
-
-      <!-- LARGE IMAGE -->
-      <img id="gallery-main" src="" alt="" />
-
-      <!-- THUMBNAIL STRIP -->
-      <div id="gallery-thumbs"></div>
-
-      <!-- WHATSAPP SHARE BUTTON -->
-      <button id="whatsapp-share-btn" class="whatsapp-btn">
-        📲 Share via WhatsApp
-      </button>
-    </div>
-  </div>
-
-  <!-- Mediapipe -->
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-
-  <!-- Main JS -->
   <script src="script.js"></script>
-
 </body>
 </html>

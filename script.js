@@ -1,201 +1,122 @@
-// =============== BASIC SETUP ===============
-const videoElement = document.getElementById('webcam');
-const canvasElement = document.getElementById('overlay');
-const canvasCtx = canvasElement.getContext('2d');
-
-const subcategoryButtons = document.getElementById('subcategory-buttons');
-const jewelryOptions = document.getElementById('jewelry-options');
+const videoElement   = document.getElementById('webcam');
+const canvasElement  = document.getElementById('overlay');
+const canvasCtx      = canvasElement.getContext('2d');
 
 let earringImg = null;
 let necklaceImg = null;
-
-let currentCategory = '';   // "earrings" | "necklaces"
-let currentTypeKey = '';    // "gold_earrings", "diamond_necklaces"
-
-let smoothedFaceLandmarks = null;
-let smoothedFacePoints = {};
-let camera = null;
-
-// Snapshot (single) elements
-const captureBtn = document.getElementById('capture-btn');
-const snapshotModal = document.getElementById('snapshot-modal');
-const snapshotPreview = document.getElementById('snapshot-preview');
-const closeSnapshotBtn = document.getElementById('close-snapshot');
-const downloadBtn = document.getElementById('download-btn');
-const shareBtn = document.getElementById('share-btn');
+let earringSrc = '';
+let necklaceSrc = '';
+let currentType = '';
+let smoothedLandmarks = null;
 let lastSnapshotDataURL = '';
 
-// TRY ALL + gallery elements
-const autoTryBtn = document.getElementById('auto-try-btn');
+/* TRY ALL + Gallery */
 let autoTryRunning = false;
 let autoTryTimeout = null;
 let autoTryIndex = 0;
-let autoSnapshots = [];      // all screenshots from Try All
+let autoSnapshots = [];
 
-const galleryModal = document.getElementById('gallery-modal');
-const galleryMain = document.getElementById('gallery-main');
-const galleryThumbs = document.getElementById('gallery-thumbs');
-const galleryClose = document.getElementById('gallery-close');
-const whatsappShareBtn = document.getElementById('whatsapp-share-btn');
+const tryAllBtn      = document.getElementById('tryall-btn');
+const flashOverlay   = document.getElementById('flash-overlay');
+const galleryModal   = document.getElementById('gallery-modal');
+const galleryMain    = document.getElementById('gallery-main');
+const galleryThumbs  = document.getElementById('gallery-thumbs');
+const galleryClose   = document.getElementById('gallery-close');
 
-// Resolution box
-const resolutionBox = document.getElementById('resolution-box');
-
-/* ===========================================
-   1. LOCAL FILES CONFIG – matches your folders
-=========================================== */
-
-const LOCAL_IMAGES = {
-  diamond_earrings: [
-    'diamond_earrings1.png',
-    'diamond_earrings2.png',
-    'diamond_earrings3.png',
-    'diamond_earrings4.png',
-    'diamond_earrings5.png',
-    'diamond_earrings6.png',
-    'diamond_earrings7.png',
-    'diamond_earrings8.png',
-    'diamond_earrings9.png'
-  ],
-  diamond_necklaces: [
-    'diamond_necklaces1.png',
-    'diamond_necklaces2.png',
-    'diamond_necklaces3.png',
-    'diamond_necklaces4.png',
-    'diamond_necklaces5.png',
-    'diamond_necklaces6.png'
-  ],
-  gold_earrings: [
-    'earring16.png',
-    'gold_earrings1.png',
-    'gold_earrings2.png',
-    'gold_earrings3.png',
-    'gold_earrings4.png',
-    'gold_earrings5.png',
-    'gold_earrings6.png',
-    'gold_earrings7.png'
-  ],
-  gold_necklaces: [
-    // add files when ready
-  ]
-};
-
-function buildSrc(typeKey, filename) {
-  return `${typeKey}/${filename}`;
-}
-
-/* ===========================================
-   2. LOAD JEWELRY + SHOW RESOLUTION QUALITY
-=========================================== */
-
-function showResolutionInfo(img) {
-  if (!resolutionBox) return;
-  const w = img.width;
-  const h = img.height;
-  const maxSide = Math.max(w, h);
-
-  let label, bg, border;
-  if (maxSide >= 900) {
-    label = 'HQ';
-    bg = 'rgba(46, 204, 113, 0.9)';
-    border = '#2ecc71';
-  } else if (maxSide >= 500) {
-    label = 'OK';
-    bg = 'rgba(241, 196, 15, 0.9)';
-    border = '#f1c40f';
-  } else {
-    label = 'LOW';
-    bg = 'rgba(231, 76, 60, 0.9)';
-    border = '#e74c3c';
-  }
-
-  resolutionBox.style.display = 'block';
-  resolutionBox.style.background = bg;
-  resolutionBox.style.borderColor = border;
-  resolutionBox.textContent = `📐 ${w} × ${h}px · ${label}`;
-}
-
+/* ------------ image helpers ------------ */
 function loadImage(src) {
   return new Promise((resolve) => {
     const img = new Image();
-    img.onload = () => {
-      showResolutionInfo(img);
-      resolve(img);
-    };
-    img.onerror = () => {
-      console.warn('Image failed:', src);
-      resolve(null);
-    };
     img.src = src;
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
   });
 }
 
-async function changeJewelry(typeKey, src) {
-  const img = await loadImage(src);
-  if (!img) return;
-  earringImg = necklaceImg = null;
-  if (typeKey.includes('earrings')) earringImg = img;
-  else necklaceImg = img;
+async function changeEarring(src) {
+  earringSrc = src;
+  const img = await loadImage(earringSrc);
+  if (img) earringImg = img;
 }
 
-/* ===========================================
-   3. CATEGORY + SUBCATEGORY HANDLING
-=========================================== */
+async function changeNecklace(src) {
+  necklaceSrc = src;
+  const img = await loadImage(necklaceSrc);
+  if (img) necklaceImg = img;
+}
 
+/* ------------ category / subcategory ------------ */
 function toggleCategory(category) {
-  stopAutoTry();
-  currentCategory = category;
-
-  jewelryOptions.style.display = 'none';
-
-  const allSubButtons = document.querySelectorAll('#subcategory-buttons button');
-  allSubButtons.forEach(btn => {
-    const btnCat = btn.dataset.category;
-    btn.style.display = (btnCat === category) ? 'inline-block' : 'none';
+  document.getElementById('subcategory-buttons').style.display = 'flex';
+  const subButtons = document.querySelectorAll('#subcategory-buttons button');
+  subButtons.forEach(btn => {
+    btn.style.display =
+      btn.innerText.toLowerCase().includes(category) ? 'inline-block' : 'none';
   });
-
-  subcategoryButtons.style.display = 'flex';
-}
-
-function selectJewelryType(category, metal) {
+  document.getElementById('jewelry-options').style.display = 'none';
   stopAutoTry();
-
-  const typeKey = `${metal}_${category}`;  // eg: gold_earrings
-  currentTypeKey = typeKey;
-
-  subcategoryButtons.style.display = 'none';
-  jewelryOptions.style.display = 'flex';
-
-  insertJewelryOptions(typeKey);
 }
 
-window.toggleCategory = toggleCategory;
-window.selectJewelryType = selectJewelryType;
+function selectJewelryType(type) {
+  currentType = type;
+  document.getElementById('jewelry-options').style.display = 'flex';
 
-function insertJewelryOptions(typeKey) {
-  jewelryOptions.innerHTML = '';
-  const files = LOCAL_IMAGES[typeKey] || [];
+  earringImg = null;
+  necklaceImg = null;
+  earringSrc = '';
+  necklaceSrc = '';
 
-  files.forEach((filename) => {
-    const src = buildSrc(typeKey, filename);
+  const { start, end } = getRangeForType(type);
+  insertJewelryOptions(type, 'jewelry-options', start, end);
+
+  stopAutoTry();
+}
+
+function getRangeForType(type) {
+  let start = 1, end = 15;
+  switch (type) {
+    case 'gold_earrings':     end = 16; break;
+    case 'gold_necklaces':    end = 19; break;
+    case 'diamond_earrings':  end = 9;  break;
+    case 'diamond_necklaces': end = 6;  break;
+    default:                  end = 15;
+  }
+  return { start, end };
+}
+
+function buildImageList(type) {
+  const { start, end } = getRangeForType(type);
+  const list = [];
+  for (let i = start; i <= end; i++) {
+    list.push(`${type}/${type}${i}.png`);
+  }
+  return list;
+}
+
+function insertJewelryOptions(type, containerId, startIndex, endIndex) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  for (let i = startIndex; i <= endIndex; i++) {
+    const filename = `${type}${i}.png`;
+    const src = `${type}/${filename}`;
     const btn = document.createElement('button');
     const img = document.createElement('img');
     img.src = src;
-
-    img.onload = () => {
-      btn.onclick = () => changeJewelry(typeKey, src);
-      btn.appendChild(img);
-      jewelryOptions.appendChild(btn);
+    btn.appendChild(img);
+    btn.onclick = () => {
+      if (type.includes('earrings')) {
+        changeEarring(src);
+      } else {
+        changeNecklace(src);
+      }
     };
-  });
+    container.appendChild(btn);
+  }
 }
 
-/* ===========================================
-   4. MEDIAPIPE FACE MESH
-=========================================== */
-
+/* ------------ Mediapipe FaceMesh ------------ */
 const faceMesh = new FaceMesh({
-  locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`
+  locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`,
 });
 
 faceMesh.setOptions({
@@ -205,230 +126,221 @@ faceMesh.setOptions({
   minTrackingConfidence: 0.6
 });
 
-faceMesh.onResults(results => {
-  canvasCtx.clearRect(0,0,canvasElement.width,canvasElement.height);
+faceMesh.onResults((results) => {
+  canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
-  if (results.multiFaceLandmarks?.length) {
-    const newLandmarks = results.multiFaceLandmarks[0];
-
-    if (!smoothedFaceLandmarks) {
-      smoothedFaceLandmarks = newLandmarks;
-    } else {
-      smoothedFaceLandmarks = smoothedFaceLandmarks.map((p, i) => ({
-        x: p.x * 0.8 + newLandmarks[i].x * 0.2,
-        y: p.y * 0.8 + newLandmarks[i].y * 0.2,
-        z: p.z * 0.8 + newLandmarks[i].z * 0.2
-      }));
-    }
-    drawJewelry(smoothedFaceLandmarks, canvasCtx);
+  if (!results.multiFaceLandmarks || !results.multiFaceLandmarks.length) {
+    smoothedLandmarks = null;
+    return;
   }
+
+  const landmarks = results.multiFaceLandmarks[0];
+
+  if (!smoothedLandmarks) {
+    smoothedLandmarks = landmarks;
+  } else {
+    smoothedLandmarks = smoothedLandmarks.map((prev, i) => ({
+      x: prev.x * 0.7 + landmarks[i].x * 0.3,
+      y: prev.y * 0.7 + landmarks[i].y * 0.3,
+      z: prev.z * 0.7 + landmarks[i].z * 0.3,
+    }));
+  }
+
+  drawJewelry(smoothedLandmarks, canvasCtx);
 });
 
-document.addEventListener('DOMContentLoaded', () => startCamera());
+/* ------------ Camera ------------ */
+const camera = new Camera(videoElement, {
+  onFrame: async () => {
+    await faceMesh.send({ image: videoElement });
+  },
+  width: 1280,
+  height: 720
+});
 
-function startCamera(facingMode = 'user') {
-  if (camera) camera.stop();
-  camera = new Camera(videoElement, {
-    onFrame: async () => await faceMesh.send({ image: videoElement }),
-    width: 1280,
-    height: 720,
-    facingMode
-  });
-  camera.start();
-}
-
-videoElement.onloadedmetadata = () => {
+videoElement.addEventListener('loadedmetadata', () => {
   canvasElement.width = videoElement.videoWidth;
   canvasElement.height = videoElement.videoHeight;
-};
+});
 
-/* ===========================================
-   5. DRAW JEWELRY – same style as old project
-=========================================== */
+camera.start();
 
-function drawJewelry(face, ctx) {
-  if (!face) return;
+/* ------------ draw jewelry ------------ */
+function drawJewelry(landmarks, ctx) {
   const context = ctx || canvasCtx;
 
-  const cw = canvasElement.width;
-  const ch = canvasElement.height;
-
-  const earringScale  = 0.07;
+  const earringScale = 0.07;
   const necklaceScale = 0.18;
 
-  const leftEarRaw = {
-    x: face[132].x * cw - 6,
-    y: face[132].y * ch - 16
+  const leftEar = {
+    x: landmarks[132].x * canvasElement.width - 6,
+    y: landmarks[132].y * canvasElement.height - 16,
   };
-  const rightEarRaw = {
-    x: face[361].x * cw + 6,
-    y: face[361].y * ch - 16
+  const rightEar = {
+    x: landmarks[361].x * canvasElement.width + 6,
+    y: landmarks[361].y * canvasElement.height - 16,
   };
-  const neckRaw = {
-    x: face[152].x * cw - 8,
-    y: face[152].y * ch + 10
+  const neck = {
+    x: landmarks[152].x * canvasElement.width - 8,
+    y: landmarks[152].y * canvasElement.height + 10,
   };
-
-  smoothedFacePoints.left  = smoothPoint(smoothedFacePoints.left,  leftEarRaw);
-  smoothedFacePoints.right = smoothPoint(smoothedFacePoints.right, rightEarRaw);
-  smoothedFacePoints.neck  = smoothPoint(smoothedFacePoints.neck,  neckRaw);
 
   if (earringImg) {
-    const w = earringImg.width  * earringScale;
-    const h = earringImg.height * earringScale;
-
-    context.drawImage(
-      earringImg,
-      smoothedFacePoints.left.x - w / 2,
-      smoothedFacePoints.left.y,
-      w,
-      h
-    );
-    context.drawImage(
-      earringImg,
-      smoothedFacePoints.right.x - w / 2,
-      smoothedFacePoints.right.y,
-      w,
-      h
-    );
+    const width = earringImg.width * earringScale;
+    const height = earringImg.height * earringScale;
+    context.drawImage(earringImg, leftEar.x - width / 2, leftEar.y, width, height);
+    context.drawImage(earringImg, rightEar.x - width / 2, rightEar.y, width, height);
   }
 
   if (necklaceImg) {
-    const w = necklaceImg.width  * necklaceScale;
-    const h = necklaceImg.height * necklaceScale;
-
-    context.drawImage(
-      necklaceImg,
-      smoothedFacePoints.neck.x - w / 2,
-      smoothedFacePoints.neck.y,
-      w,
-      h
-    );
+    const width = necklaceImg.width * necklaceScale;
+    const height = necklaceImg.height * necklaceScale;
+    context.drawImage(necklaceImg, neck.x - width / 2, neck.y, width, height);
   }
 }
 
-function smoothPoint(prev, curr, factor = 0.4) {
-  if (!prev) return curr;
-  return {
-    x: prev.x * (1 - factor) + curr.x * factor,
-    y: prev.y * (1 - factor) + curr.y * factor
-  };
+/* ------------ snapshot helpers ------------ */
+function triggerFlash() {
+  if (!flashOverlay) return;
+  flashOverlay.classList.add('active');
+  setTimeout(() => flashOverlay.classList.remove('active'), 180);
 }
 
-/* ===========================================
-   6. SNAPSHOT HELPERS
-=========================================== */
+function captureSnapshotDataURL() {
+  const snapshotCanvas = document.createElement('canvas');
+  const ctx = snapshotCanvas.getContext('2d');
 
-function captureCurrentFrameDataURL() {
-  const snapCanvas = document.createElement('canvas');
-  snapCanvas.width = canvasElement.width;
-  snapCanvas.height = canvasElement.height;
-  const ctx = snapCanvas.getContext('2d');
+  // use canvas resolution for better quality
+  snapshotCanvas.width  = canvasElement.width;
+  snapshotCanvas.height = canvasElement.height;
 
-  ctx.drawImage(videoElement, 0, 0, snapCanvas.width, snapCanvas.height);
-  if (smoothedFaceLandmarks) {
-    drawJewelry(smoothedFaceLandmarks, ctx);
+  ctx.drawImage(videoElement, 0, 0, snapshotCanvas.width, snapshotCanvas.height);
+  if (smoothedLandmarks) {
+    drawJewelry(smoothedLandmarks, ctx);
   }
-  return snapCanvas.toDataURL('image/png');
+  return snapshotCanvas.toDataURL('image/png');
 }
 
+/* ------------ manual snapshot button ------------ */
 function takeSnapshot() {
-  lastSnapshotDataURL = captureCurrentFrameDataURL();
-  snapshotPreview.src = lastSnapshotDataURL;
-  snapshotModal.style.display = 'flex';
-}
-
-function closeSnapshot() {
-  snapshotModal.style.display = 'none';
-}
-
-function downloadSnapshot() {
-  const a = document.createElement('a');
-  a.href = lastSnapshotDataURL;
-  a.download = 'tryon.png';
-  a.click();
-}
-
-async function shareSnapshot() {
-  if (!navigator.share || !navigator.canShare) {
-    alert('Sharing not supported on this device.');
+  if (!smoothedLandmarks) {
+    alert("Face not detected. Please try again.");
     return;
   }
-  const blob = await (await fetch(lastSnapshotDataURL)).blob();
-  const file = new File([blob], 'tryon.png', { type: 'image/png' });
 
-  await navigator.share({ files: [file], title: 'Jewels Try-On' });
+  triggerFlash();
+  lastSnapshotDataURL = captureSnapshotDataURL();
+  document.getElementById('snapshot-preview').src = lastSnapshotDataURL;
+  document.getElementById('snapshot-modal').style.display = 'block';
 }
 
-captureBtn.addEventListener('click', takeSnapshot);
-closeSnapshotBtn.addEventListener('click', closeSnapshot);
-downloadBtn.addEventListener('click', downloadSnapshot);
-shareBtn.addEventListener('click', shareSnapshot);
+function saveSnapshot() {
+  const link = document.createElement('a');
+  link.href = lastSnapshotDataURL;
+  link.download = `jewelry-tryon-${Date.now()}.png`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
 
-/* ===========================================
-   7. TRY ALL + GALLERY
-=========================================== */
+function shareSnapshot() {
+  if (navigator.share) {
+    fetch(lastSnapshotDataURL)
+      .then(res => res.blob())
+      .then(blob => {
+        const file = new File([blob], 'jewelry-tryon.png', { type: 'image/png' });
+        navigator.share({
+          title: 'Jewelry Try-On',
+          text: 'Check out my look!',
+          files: [file]
+        });
+      })
+      .catch(console.error);
+  } else {
+    alert('Sharing not supported on this browser.');
+  }
+}
 
+function closeSnapshotModal() {
+  document.getElementById('snapshot-modal').style.display = 'none';
+}
+
+/* ------------ info modal ------------ */
+function toggleInfoModal() {
+  const modal = document.getElementById('info-modal');
+  modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
+}
+
+/* ------------ TRY ALL logic ------------ */
 function stopAutoTry() {
   autoTryRunning = false;
   if (autoTryTimeout) clearTimeout(autoTryTimeout);
   autoTryTimeout = null;
-  autoTryBtn.classList.remove('active');
-  autoTryBtn.textContent = 'TRY ALL';
+  if (tryAllBtn) {
+    tryAllBtn.classList.remove('active');
+    tryAllBtn.textContent = 'Try All';
+  }
 }
 
-async function runAutoTryAll() {
-  if (!currentTypeKey) {
-    alert('Please choose Earrings/Chains and then Gold/Diamond first.');
+function toggleTryAll() {
+  if (autoTryRunning) {
     stopAutoTry();
+  } else {
+    startAutoTry();
+  }
+}
+
+async function startAutoTry() {
+  if (!currentType) {
+    alert('Please choose Gold / Diamond and a jewelry type first.');
     return;
   }
 
-  const files = LOCAL_IMAGES[currentTypeKey] || [];
-  if (!files.length) {
-    alert('No jewelry images found for this type.');
-    stopAutoTry();
+  const list = buildImageList(currentType);
+  if (!list.length) {
+    alert('No items found for this category.');
     return;
   }
 
   autoSnapshots = [];
   autoTryIndex = 0;
   autoTryRunning = true;
-  autoTryBtn.classList.add('active');
-  autoTryBtn.textContent = 'STOP';
+  tryAllBtn.classList.add('active');
+  tryAllBtn.textContent = 'Stop';
 
-  const loopStep = async () => {
+  const step = async () => {
     if (!autoTryRunning) return;
 
-    const filename = files[autoTryIndex];
-    const src = buildSrc(currentTypeKey, filename);
+    const src = list[autoTryIndex];
 
-    await changeJewelry(currentTypeKey, src);
-    await new Promise(res => setTimeout(res, 1200));
+    if (currentType.includes('earrings')) {
+      await changeEarring(src);
+    } else {
+      await changeNecklace(src);
+    }
 
-    const dataURL = captureCurrentFrameDataURL();
-    autoSnapshots.push(dataURL);
+    await new Promise(res => setTimeout(res, 800));
+
+    triggerFlash();
+    if (smoothedLandmarks) {
+      const dataURL = captureSnapshotDataURL();
+      autoSnapshots.push(dataURL);
+    }
 
     autoTryIndex++;
-    if (autoTryIndex >= files.length) {
+    if (autoTryIndex >= list.length) {
       stopAutoTry();
       openGallery();
       return;
     }
 
-    autoTryTimeout = setTimeout(loopStep, 200);
+    autoTryTimeout = setTimeout(step, 2000);
   };
 
-  loopStep();
+  step();
 }
 
-function toggleAutoTry() {
-  if (autoTryRunning) stopAutoTry();
-  else runAutoTryAll();
-}
-
-autoTryBtn.addEventListener('click', toggleAutoTry);
-
+/* ------------ Gallery (after TRY ALL) ------------ */
 function openGallery() {
   if (!autoSnapshots.length) {
     alert('No snapshots captured.');
@@ -436,11 +348,10 @@ function openGallery() {
   }
 
   galleryThumbs.innerHTML = '';
-
   autoSnapshots.forEach((src, idx) => {
     const img = document.createElement('img');
     img.src = src;
-    img.addEventListener('click', () => setGalleryMain(idx));
+    img.onclick = () => setGalleryMain(idx);
     galleryThumbs.appendChild(img);
   });
 
@@ -458,41 +369,56 @@ function setGalleryMain(index) {
   });
 }
 
-function closeGallery() {
-  galleryModal.style.display = 'none';
+if (galleryClose) {
+  galleryClose.addEventListener('click', () => {
+    galleryModal.style.display = 'none';
+  });
 }
 
-galleryClose.addEventListener('click', closeGallery);
+/* Download from gallery */
+function downloadCurrentFromGallery() {
+  if (!galleryMain.src) return;
+  const link = document.createElement('a');
+  link.href = galleryMain.src;
+  link.download = `jewelry-look-${Date.now()}.png`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
 
-/* ===========================================
-   8. WHATSAPP SHARE FROM GALLERY
-=========================================== */
-
-function shareGalleryViaWhatsApp() {
-  if (!autoSnapshots || autoSnapshots.length === 0) {
-    alert('No snapshots to share.');
+/* WhatsApp share from gallery */
+function shareCurrentToWhatsApp() {
+  if (!galleryMain.src) {
+    alert('No image selected.');
     return;
   }
 
-  const input = prompt(
-    'Enter customer WhatsApp number with country code (example: 91XXXXXXXXXX):'
+  const phone = prompt(
+    'Enter WhatsApp number with country code (example: 919876543210):'
   );
-  if (!input) return;
+  if (!phone) return;
 
-  const phone = input.replace(/\D/g, '');
-  if (!phone) {
-    alert('Invalid number. Please try again.');
-    return;
-  }
+  const text =
+    'Hi! Here is your jewelry try-on look. Save this image from the link below:\n\n' +
+    galleryMain.src;
 
-  const message = encodeURIComponent(
-    'Hi! These are your jewelry try-on looks from Overlay Jewels.\n\n' +
-    'We will now share the photos from our WhatsApp number: +917019743880.\n\n' +
-    '— Overlay Jewels'
-  );
+  const waUrl =
+    'https://wa.me/' +
+    encodeURIComponent(phone) +
+    '?text=' +
+    encodeURIComponent(text);
 
-  const waUrl = `https://wa.me/${phone}?text=${message}`;
   window.open(waUrl, '_blank');
 }
 
-whatsappShareBtn.addEventListener('click', shareGalleryViaWhatsApp);
+/* expose functions to global */
+window.toggleCategory = toggleCategory;
+window.selectJewelryType = selectJewelryType;
+window.takeSnapshot = takeSnapshot;
+window.saveSnapshot = saveSnapshot;
+window.shareSnapshot = shareSnapshot;
+window.closeSnapshotModal = closeSnapshotModal;
+window.toggleInfoModal = toggleInfoModal;
+window.toggleTryAll = toggleTryAll;
+window.downloadCurrentFromGallery = downloadCurrentFromGallery;
+window.shareCurrentToWhatsApp = shareCurrentToWhatsApp;
