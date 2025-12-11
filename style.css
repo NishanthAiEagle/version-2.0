@@ -1,6 +1,6 @@
-/* style.css — Merged & cleaned version for Nishanth (warm-gold premium) */
+/* style.css — Full premium warm-gold UI for Aurum Atelier */
 
-/* ---------- Fonts ---------- */
+/* Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Montserrat:wght@300;500;700&display=swap');
 
 :root{
@@ -20,53 +20,39 @@
   --glass-border: rgba(255,255,255,0.04);
 }
 
-/* ---------- Reset & base ---------- */
+/* Reset & base */
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 html, body, #app { height: 100%; width: 100%; background: var(--bg); color: #fff; font-family: Montserrat, system-ui, -apple-system, "Segoe UI", sans-serif; overflow: hidden; }
 
-/* ---------- App container ---------- */
+/* App container */
 #app { width: 100vw; height: 100vh; position: relative; }
 
-/* Logo (kept for compatibility) */
+/* Logo */
 #logo { position: fixed; top: 12px; left: 12px; z-index: 10; }
 #logo img { height: 40px; }
 
 /* Video & Canvas */
-#video-container {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  background: #000;
-  z-index: 0;
-}
+#video-container { position: absolute; inset: 0; overflow: hidden; background: #000; z-index: 0; }
+#webcam { display: none; }
+#overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; background: #000; z-index: 1; }
 
-/* bottom 30% dark gradient behind jewellery & buttons */
+/* bottom dark gradient behind jewellery & buttons
+   - To change darkness: edit the alpha in rgba(0,0,0,0.50) (30% => 0.30, 50% => 0.50)
+   - To change height: edit height: 20vh (e.g. 30vh)
+*/
 #video-container::after {
   content: "";
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 20vh; /* ~30% of screen height */
+  height: 20vh; /* adjustable: change height here */
   pointer-events: none;
   z-index: 5; /* above video, below UI buttons (which are z 20+) */
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.86), rgba(0,0,0,0.0));
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.50), rgba(0,0,0,0.0));
 }
 
-#webcam { display: none; }
-#overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  /* COVER so no black bar on top/bottom */
-  object-fit: cover;
-  background: #000;
-  z-index: 1;
-}
-
-/* ---------- Jewelry category bar (Gold / Diamond / Try All) ---------- */
+/* Jewelry category bar */
 #jewelry-mode {
   position: fixed;
   bottom: 150px;             /* above subcategory row */
@@ -93,7 +79,7 @@ html, body, #app { height: 100%; width: 100%; background: var(--bg); color: #fff
 #tryall-btn { background: rgba(255,255,255,0.06); color: #fff; }
 #tryall-btn.active { background: var(--accent); color: var(--accent-contrast); }
 
-/* ---------- Subcategory buttons (Gold Earrings / Necklaces etc.) ---------- */
+/* Subcategory buttons */
 #subcategory-buttons {
   position: fixed;
   bottom: 90px;              /* just above jewellery thumbnails */
@@ -124,7 +110,7 @@ html, body, #app { height: 100%; width: 100%; background: var(--bg); color: #fff
   color: #000;
 }
 
-/* ---------- Jewelry thumbnails row ---------- */
+/* Jewelry thumbnails row */
 #jewelry-options {
   position: fixed;
   bottom: 0;
@@ -146,7 +132,7 @@ html, body, #app { height: 100%; width: 100%; background: var(--bg); color: #fff
   filter: drop-shadow(0 6px 18px rgba(0,0,0,0.7));
 }
 
-/* ---------- Snapshot button ---------- */
+/* Snapshot button */
 #snapshot-btn {
   position: fixed;
   top: 16px;
@@ -157,7 +143,7 @@ html, body, #app { height: 100%; width: 100%; background: var(--bg); color: #fff
   z-index: 20;
 }
 
-/* ---------- Info button ---------- */
+/* Info button */
 #info-btn {
   position: fixed;
   top: 16px;
@@ -174,25 +160,26 @@ html, body, #app { height: 100%; width: 100%; background: var(--bg); color: #fff
 }
 #info-btn:hover { background: rgba(255,255,255,0.05); }
 
-/* ---------- Location button (near camera) ---------- */
+/* Location button (moved near top camera) */
 #location-btn {
   position: fixed;
   top: 16px;
-  right: 120px;
-  background: transparent;
+  right: 120px; /* adjusted to sit near top camera */
   border: none;
+  background: transparent;
   z-index: 20;
 }
+
+/* icon sizing */
 #snapshot-btn img,
 #info-btn img,
 #location-btn img {
-    width: 34px;
-    height: 34px;
-    object-fit: contain;
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
 }
 
-
-/* ---------- Info Modal ---------- */
+/* Info Modal */
 #info-modal {
   display: none;
   position: fixed;
@@ -210,17 +197,9 @@ html, body, #app { height: 100%; width: 100%; background: var(--bg); color: #fff
 }
 #info-modal h3 { margin-bottom: 10px; text-align: center; font-family: 'Playfair Display', serif; color: var(--accent); }
 .info-content ul { padding-left: 20px; line-height: 1.6; color: var(--muted); }
-.close-btn {
-  background: var(--accent);
-  color: var(--accent-contrast);
-  padding: 10px 15px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  margin-top: 16px;
-}
+.close-btn { background: var(--accent); color: var(--accent-contrast); padding: 10px 15px; border-radius: 8px; border: none; cursor: pointer; margin-top: 16px; }
 
-/* ---------- Snapshot Modal ---------- */
+/* Snapshot Modal */
 #snapshot-modal {
   display: none;
   position: fixed;
@@ -239,17 +218,9 @@ html, body, #app { height: 100%; width: 100%; background: var(--bg); color: #fff
   border: 1px solid rgba(0,0,0,0.06);
 }
 #snapshot-preview { width: 100%; max-width: 420px; border-radius: 10px; margin-bottom: 12px; }
-.snapshot-buttons button {
-  margin: 6px;
-  padding: 10px 16px;
-  border-radius: 8px;
-  border: none;
-  background: var(--accent);
-  color: var(--accent-contrast);
-  cursor: pointer;
-}
+.snapshot-buttons button { margin: 6px; padding: 10px 16px; border-radius: 8px; border: none; background: var(--accent); color: var(--accent-contrast); cursor: pointer; }
 
-/* ---------- Flash Overlay ---------- */
+/* Flash Overlay */
 #flash-overlay {
   position: fixed;
   inset: 0;
@@ -299,13 +270,7 @@ html, body, #app { height: 100%; width: 100%; background: var(--bg); color: #fff
 }
 
 /* Layout: main image + side slider */
-#gallery-layout {
-  display: flex;
-  gap: 14px;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-}
+#gallery-layout { display: flex; gap: 14px; justify-content: center; align-items: center; flex-wrap: wrap; }
 
 /* Big main image */
 #gallery-main {
@@ -329,10 +294,7 @@ html, body, #app { height: 100%; width: 100%; background: var(--bg); color: #fff
   border: 1px solid rgba(255,255,255,0.02);
 }
 #gallery-side-slider::-webkit-scrollbar { width: 6px; }
-#gallery-side-slider::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg,var(--accent),var(--accent-2));
-  border-radius: 4px;
-}
+#gallery-side-slider::-webkit-scrollbar-thumb { background: linear-gradient(180deg,var(--accent),var(--accent-2)); border-radius: 4px; }
 
 /* thumbs container */
 #gallery-thumbs { display: flex; flex-direction: column; gap: 10px; }
@@ -344,18 +306,10 @@ html, body, #app { height: 100%; width: 100%; background: var(--bg); color: #fff
   border-radius: 8px;
   border: 2px solid transparent;
 }
-#gallery-thumbs img.active {
-  border-color: var(--accent);
-  box-shadow: 0 8px 20px rgba(212,175,55,0.08);
-}
+#gallery-thumbs img.active { border-color: var(--accent); box-shadow: 0 8px 20px rgba(212,175,55,0.08); }
 
 /* Buttons under gallery */
-.gallery-buttons {
-  display: flex;
-  justify-content: center;
-  margin-top: 12px;
-  gap: 12px;
-}
+.gallery-buttons { display: flex; justify-content: center; margin-top: 12px; gap: 12px; }
 .gallery-buttons button {
   padding: 10px 18px;
   border-radius: 999px;
@@ -381,6 +335,11 @@ html, body, #app { height: 100%; width: 100%; background: var(--bg); color: #fff
   }
   #gallery-thumbs { flex-direction: row; gap: 10px; }
   #gallery-thumbs img { width: 90px; height: 90px; }
+
+  /* compact buttons so UI doesn't overlap */
+  #jewelry-mode { bottom: 130px; gap: 8px; }
+  #subcategory-buttons { bottom: 70px; gap: 8px; }
+  #jewelry-options img { height: 48px; }
 }
 
 /* ===========================
@@ -405,48 +364,11 @@ html, body, #app { height: 100%; width: 100%; background: var(--bg); color: #fff
 .tune-row { margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; }
 .tune-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
 .tune-value { background: rgba(0,0,0,0.45); padding: 2px 8px; border-radius: 99px; font-size: 12px; font-weight: 700; color: #fff; }
-.tune-row input[type="range"] {
-  width: 100%;
-  -webkit-appearance: none;
-  appearance: none;
-  height: 6px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 99px;
-  outline: none;
-}
-.tune-row input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--accent);
-  border: 2px solid rgba(0,0,0,0.25);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-  cursor: pointer;
-}
+.tune-row input[type="range"] { width: 100%; -webkit-appearance: none; appearance: none; height: 6px; background: rgba(255,255,255,0.1); border-radius: 99px; outline: none; }
+.tune-row input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); border: 2px solid rgba(0,0,0,0.25); box-shadow: 0 4px 10px rgba(0,0,0,0.4); cursor: pointer; }
 .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
-.toggle {
-  --w:44px;
-  --h:24px;
-  width: var(--w);
-  height: var(--h);
-  background: rgba(255,255,255,0.08);
-  border-radius: 999px;
-  position: relative;
-  cursor: pointer;
-  transition: background .18s;
-}
-.toggle .knob {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: calc(var(--h) - 4px);
-  height: calc(var(--h) - 4px);
-  background: #fff;
-  border-radius: 50%;
-  transition: left .18s, background .18s;
-}
+.toggle { --w:44px; --h:24px; width: var(--w); height: var(--h); background: rgba(255,255,255,0.08); border-radius: 999px; position: relative; cursor: pointer; transition: background .18s; }
+.toggle .knob { position: absolute; top: 2px; left: 2px; width: calc(var(--h) - 4px); height: calc(var(--h) - 4px); background: #fff; border-radius: 50%; transition: left .18s, background .18s; }
 .toggle.on { background: linear-gradient(90deg,var(--accent),var(--accent-2)); }
 .toggle.on .knob { left: calc(var(--w) - var(--h) + 2px); background: #fff; }
 .tuning-help { font-size: 11px; color: rgba(255,255,255,0.72); margin-top: 6px; }

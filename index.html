@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>www.jewels-ai.com</title>
+  <title>Aurum Atelier — AR Jewelry Try-On</title>
 
   <!-- Stylesheet -->
   <link rel="stylesheet" href="style.css" />
@@ -16,7 +16,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.0.5/dist/body-pix.min.js"></script>
 
-  <!-- Utility libs for gallery export (keeps existing features) -->
+  <!-- Utility libs for gallery export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 </head>
@@ -28,7 +28,7 @@
       <canvas id="overlay"></canvas>
     </div>
 
-    <!-- ====== TOP CONTROL BAR (PREMIUM) ====== -->
+    <!-- TOP CONTROL BAR -->
     <section id="controls-hero" aria-hidden="false">
       <div class="brand-row">
         <div class="brand-left">
@@ -41,13 +41,11 @@
 
         <div class="action-row">
           <button id="info-btn" onclick="toggleInfoModal()">
-    <img src="info icon.png" alt="Info">
-</button>
-
-</button>
-         <button id="snapshot-btn" onclick="takeSnapshot()">
-    <img src="camera-icon.png" alt="Camera">
-</button>
+            <img src="info-icon.png" alt="Info">
+          </button>
+          <button id="snapshot-btn" onclick="takeSnapshot()">
+            <img src="camera-icon.png" alt="Camera">
+          </button>
         </div>
       </div>
 
@@ -69,29 +67,24 @@
       </div>
     </section>
 
-    <!-- small location link (left bottom) -->
-    <a id="location-btn" href="https://maps.app.goo.gl/sUaHgHpHDYxrBSELA" target="_blank">
-    <img src="location_icon.png" alt="Location">
-</a>
-
-
+    <!-- Location button -->
+    <button id="location-btn" onclick="openLocation()">
+      <img src="location_icon.png" alt="Location">
+    </button>
 
     <!-- Flash overlay (snapshot effect) -->
     <div id="flash-overlay" aria-hidden="true"></div>
 
     <!-- Info modal -->
     <div id="info-modal" role="dialog" aria-modal="true" aria-labelledby="info-title" style="display:none;">
-  <h3 id="info-title">How to use</h3>
-  <div class="info-content">
-    <ul>
-      <li>Allow camera access when prompted.</li>
-      <li>Choose category → pick a design or press Try All.</li>
-      <li>Press Stop to view the gallery of captured looks.</li>
-    </ul>
-    <button class="close-btn" onclick="toggleInfoModal()">Close</button>
-  </div>
-</div>
-
+      <h3 id="info-title">How to use</h3>
+      <div class="info-content">
+        <ul>
+          <li>Allow camera access.</li>
+          <li>Choose category → pick a design or press Try All.</li>
+          <li>Press Stop to view gallery of captured looks.</li>
+        </ul>
+        <button class="close-btn" onclick="toggleInfoModal()">Close</button>
       </div>
     </div>
 
@@ -119,9 +112,10 @@
         </div>
       </div>
     </div>
+
   </div>
 
-  <!-- main script (keeps existing script.js) -->
+  <!-- main script -->
   <script src="script.js"></script>
 </body>
 </html>
