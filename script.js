@@ -7,6 +7,10 @@ const IMAGE_COUNTS = {
   diamond_necklaces: 6
 };
 
+/* --- 1. PRELOAD WATERMARK --- */
+const watermarkImg = new Image();
+watermarkImg.src = 'logo_watermark.png'; // Ensure this file exists in your folder
+
 /* DOM Elements */
 const videoElement = document.getElementById('webcam');
 const canvasElement = document.getElementById('overlay');
@@ -30,7 +34,7 @@ let autoTryRunning = false;
 let autoSnapshots = [];
 let autoTryIndex = 0;
 let autoTryTimeout = null;
-let currentPreviewUrl = null; // Store the single image being reviewed
+let currentPreviewUrl = null; 
 
 /* --- Asset Preloading Cache --- */
 const preloadedAssets = {};
@@ -304,18 +308,36 @@ async function runAutoStep() {
   }, 1500); 
 }
 
+/* ---------- CAPTURE + WATERMARK LOGIC ---------- */
 function captureToGallery() {
   const tempCanvas = document.createElement('canvas');
   tempCanvas.width = videoElement.videoWidth;
   tempCanvas.height = videoElement.videoHeight;
   const tempCtx = tempCanvas.getContext('2d');
   
+  // 1. Draw Video (Mirrored)
   tempCtx.translate(tempCanvas.width, 0);
   tempCtx.scale(-1, 1);
   tempCtx.drawImage(videoElement, 0, 0);
   
+  // 2. Draw Jewelry Overlay (Reset transform first)
   tempCtx.setTransform(1, 0, 0, 1, 0, 0); 
   tempCtx.drawImage(canvasElement, 0, 0);
+
+  // 3. Draw Watermark (Bottom Right)
+  if (watermarkImg.complete && watermarkImg.naturalWidth > 0) {
+      const padding = 20; 
+      // Scale watermark to 25% of the screenshot width
+      const wWidth = tempCanvas.width * 0.25; 
+      const wHeight = (watermarkImg.height / watermarkImg.width) * wWidth;
+      
+      const wX = tempCanvas.width - wWidth - padding;
+      const wY = tempCanvas.height - wHeight - padding;
+      
+      tempCtx.globalAlpha = 0.9; // Slight transparency
+      tempCtx.drawImage(watermarkImg, wX, wY, wWidth, wHeight);
+      tempCtx.globalAlpha = 1.0;
+  }
   
   const dataUrl = tempCanvas.toDataURL('image/png');
   autoSnapshots.push(dataUrl);
@@ -326,19 +348,17 @@ function captureToGallery() {
     setTimeout(() => flash.classList.remove('active'), 100);
   }
   
-  return dataUrl; // NEW: Return the image so we can use it immediately
+  return dataUrl; 
 }
 
 function takeSnapshot() {
-    // 1. Capture
     const imgData = captureToGallery();
-    // 2. Show Single Preview
     openSinglePreview(imgData);
 }
 
-/* ---------- SINGLE PREVIEW (NEW) ---------- */
+/* ---------- SINGLE PREVIEW ---------- */
 function openSinglePreview(dataUrl) {
-    currentPreviewUrl = dataUrl; // Store for download/share logic
+    currentPreviewUrl = dataUrl; 
     const modal = document.getElementById('preview-modal');
     const img = document.getElementById('preview-image');
     
@@ -359,7 +379,6 @@ function downloadSingleSnapshot() {
 async function shareSingleSnapshot() {
     if(!currentPreviewUrl) return;
     
-    // Convert DataURL to Blob for sharing
     const response = await fetch(currentPreviewUrl);
     const blob = await response.blob();
     const file = new File([blob], "look.png", { type: "image/png" });
@@ -439,7 +458,7 @@ function closeGallery() {
   document.getElementById('gallery-modal').style.display = 'none';
 }
 
-/* ---------- ZIP DOWNLOAD WITH PROCESS UI ---------- */
+/* ---------- ZIP DOWNLOAD ---------- */
 function downloadAllAsZip() {
     if (autoSnapshots.length === 0) {
         alert("No images to download!");
@@ -486,7 +505,6 @@ window.closeGallery = closeGallery;
 window.closeLightbox = closeLightbox;
 window.takeSnapshot = takeSnapshot;
 window.downloadAllAsZip = downloadAllAsZip;
-// New globals
 window.closePreview = closePreview;
 window.downloadSingleSnapshot = downloadSingleSnapshot;
 window.shareSingleSnapshot = shareSingleSnapshot;
