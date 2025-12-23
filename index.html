@@ -3,54 +3,46 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Aurum Atelier — AR Jewelry Try-On</title>
-
-  <!-- Stylesheet -->
+  <title>Aurum Atelier | Virtual Jewelry Try-On</title>
+  
   <link rel="stylesheet" href="style.css" />
 
-  <!-- Mediapipe FaceMesh -->
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 
-  <!-- TensorFlow + BodyPix (optional occlusion) -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.0.5/dist/body-pix.min.js"></script>
-
-  <!-- Utility libs for gallery export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 </head>
 <body>
   <div id="app">
-    <!-- Canvas & video -->
     <div id="video-container">
-      <video id="webcam" autoplay playsinline muted style="display:none;"></video>
+      <video id="webcam" autoplay playsinline muted></video>
       <canvas id="overlay"></canvas>
     </div>
 
-    <!-- TOP CONTROL BAR -->
-    <section id="controls-hero" aria-hidden="false">
+    <div id="loading-status">Starting Camera...</div>
+
+    <div id="gesture-indicator">
+      <div id="indicator-dot"></div>
+      <span id="indicator-text">Show Hand to Control</span>
+    </div>
+
+    <header id="controls-hero">
       <div class="brand-row">
         <div class="brand-left">
-          <img src="logo.png" alt="Brand" class="brand-logo" />
-          <div class="brand-meta">
-            <div class="brand-name">Aurum Atelier</div>
-            <div class="brand-tag">Studio-grade AR • Try before you buy</div>
-          </div>
+          <img src="logo.png" alt="Aurum Atelier Logo" class="brand-logo" />
+          <div class="brand-name">Aurum Atelier</div>
         </div>
-
         <div class="action-row">
-          <button id="info-btn" onclick="toggleInfoModal()">
-            <img src="info-icon.png" alt="Info">
-          </button>
-          <button id="snapshot-btn" onclick="takeSnapshot()">
-            <img src="camera-icon.png" alt="Camera">
+          <button id="snapshot-btn" onclick="takeSnapshot()" title="Capture Look">
+             <span style="font-size:20px;">📷</span>
           </button>
         </div>
       </div>
 
       <div class="controls-panel">
-        <div id="jewelry-mode" class="pill-group" role="tablist" aria-label="Jewelry categories">
+        <div id="jewelry-mode" class="pill-group">
           <button class="pill" onclick="toggleCategory('gold')">Gold</button>
           <button class="pill" onclick="toggleCategory('diamond')">Diamond</button>
           <button id="tryall-btn" class="pill accent" onclick="toggleTryAll()">Try All</button>
@@ -65,57 +57,59 @@
 
         <div id="jewelry-options" class="carousel-cards" style="display:none;"></div>
       </div>
-    </section>
+    </header>
 
-    <!-- Location button -->
-    <button id="location-btn" onclick="openLocation()">
-      <img src="location_icon.png" alt="Location">
-    </button>
+    <div id="preview-modal">
+        <span class="close-preview" onclick="closePreview()">&times;</span>
+        
+        <div class="preview-container">
+            <img id="preview-image" src="" alt="Captured Look">
+        </div>
 
-    <!-- Flash overlay (snapshot effect) -->
-    <div id="flash-overlay" aria-hidden="true"></div>
-
-    <!-- Info modal -->
-    <div id="info-modal" role="dialog" aria-modal="true" aria-labelledby="info-title" style="display:none;">
-      <h3 id="info-title">How to use</h3>
-      <div class="info-content">
-        <ul>
-          <li>Allow camera access.</li>
-          <li>Choose category → pick a design or press Try All.</li>
-          <li>Press Stop to view gallery of captured looks.</li>
-        </ul>
-        <button class="close-btn" onclick="toggleInfoModal()">Close</button>
-      </div>
+        <div class="preview-actions">
+            <button class="pill accent" onclick="downloadSingleSnapshot()">
+                Download
+            </button>
+            <button class="pill" onclick="shareSingleSnapshot()">
+                Share
+            </button>
+        </div>
     </div>
 
-    <!-- Snapshot modal -->
-    <div id="snapshot-modal" role="dialog" aria-modal="true" style="display:none;">
-      <img id="snapshot-preview" alt="Snapshot preview" />
-      <div class="snapshot-buttons">
-        <button onclick="saveSnapshot()">Download</button>
-        <button onclick="shareSnapshot()">Share</button>
-        <button onclick="closeSnapshotModal()">Close</button>
-      </div>
-    </div>
-
-    <!-- Fullscreen Gallery Modal -->
-    <div id="gallery-modal" role="dialog" aria-modal="true" style="display:none;">
+    <div id="gallery-modal" role="dialog" aria-labelledby="gallery-title" aria-modal="true">
       <div class="gallery-content">
-        <button id="gallery-close" aria-label="Close gallery">×</button>
-        <div id="gallery-layout">
-          <img id="gallery-main" alt="Look" />
-          <div id="gallery-side-slider"><div id="gallery-thumbs"></div></div>
-        </div>
-        <div class="gallery-buttons">
-          <button onclick="downloadAllImages()">Download All</button>
-          <button onclick="shareCurrentFromGallery()">Share</button>
+        <span class="close-gallery" onclick="closeGallery()" aria-label="Close Gallery">&times;</span>
+        <h2 id="gallery-title" style="font-family: 'Playfair Display'; color: #d4af37;">Your Collection</h2>
+        <div class="gallery-subtitle">Tap an image to view details</div>
+        
+        <div id="gallery-grid"></div>
+        
+        <div style="margin-top: 20px;">
+          <button class="pill accent" onclick="downloadAllAsZip()">Download ZIP</button>
+          <button class="pill" onclick="closeGallery()" style="margin-left: 10px;">Back to Camera</button>
         </div>
       </div>
     </div>
 
+    <div id="lightbox-overlay">
+        <span class="close-lightbox" onclick="closeLightbox()">&times;</span>
+        <div class="lightbox-main">
+            <img id="lightbox-image" src="" alt="Zoomed View">
+        </div>
+        <div class="lightbox-strip" id="lightbox-thumbs"></div>
+    </div>
+
+    <div id="process-overlay">
+        <div class="process-box">
+            <div id="process-spinner" class="spinner"></div>
+            <div id="process-success" style="display:none; font-size: 50px;">✅</div>
+            <p id="process-text" style="margin-top:15px; font-size:18px;">Packaging Collection...</p>
+        </div>
+    </div>
+
+    <div id="flash-overlay"></div>
   </div>
 
-  <!-- main script -->
   <script src="script.js"></script>
 </body>
 </html>
