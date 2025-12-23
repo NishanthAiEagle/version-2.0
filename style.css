@@ -32,7 +32,6 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* Mirror the video so it feels natural immediately */
   transform: scaleX(-1);
 }
 
@@ -41,7 +40,7 @@ body {
   width: 100%; 
   height: 100%; 
   object-fit: cover; 
-  z-index: 1; /* Above video */
+  z-index: 1; 
 }
 
 /* --- 2. LOADING STATUS --- */
@@ -59,8 +58,13 @@ body {
     z-index: 500;
 }
 
-/* --- 3. GESTURE INDICATOR --- */
+/* --- 3. GESTURE INDICATOR (HIDDEN) --- */
 #gesture-indicator {
+  /* HIDE THIS ELEMENT AS REQUESTED */
+  display: none !important; 
+  
+  /* Original styles kept below for reference if you ever want it back */
+  /*
   position: fixed; 
   top: 20px; 
   left: 20px; 
@@ -73,6 +77,7 @@ body {
   border-radius: 20px; 
   border: 1px solid rgba(255,255,255,0.1); 
   backdrop-filter: blur(8px);
+  */
 }
 
 #indicator-dot { 
@@ -174,7 +179,7 @@ body {
   100% { transform: scale(1); }
 }
 
-/* --- 6. JEWELRY SELECTOR CAROUSEL --- */
+/* --- 6. CAROUSEL --- */
 .carousel-cards {
   display: flex; 
   gap: 15px; 
@@ -198,7 +203,7 @@ body {
 
 .thumb-btn:hover { border-color: var(--accent); transform: translateY(-5px); }
 
-/* --- 7. SINGLE SNAPSHOT PREVIEW MODAL --- */
+/* --- 7. SINGLE PREVIEW MODAL --- */
 #preview-modal {
     position: fixed;
     inset: 0;
@@ -247,7 +252,7 @@ body {
     z-index: 2001;
 }
 
-/* --- 8. GALLERY MODAL (GRID) --- */
+/* --- 8. GALLERY GRID --- */
 #gallery-modal {
   position: fixed; 
   inset: 0; 
@@ -310,18 +315,18 @@ body {
   line-height: 1;
 }
 
-/* --- 9. LIGHTBOX (ZOOM WITH STRIP) --- */
+/* --- 9. LIGHTBOX --- */
 #lightbox-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.98);
     z-index: 2000;
-    display: none; /* Hidden by default */
-    flex-direction: column; /* Stack image and strip */
+    display: none; 
+    flex-direction: column;
 }
 
 .lightbox-main {
-    flex: 1; /* Takes remaining space */
+    flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -349,7 +354,6 @@ body {
     white-space: nowrap;
 }
 
-/* Hide scrollbar on strip */
 .lightbox-strip::-webkit-scrollbar { display: none; }
 .lightbox-strip { scrollbar-width: none; }
 
@@ -385,7 +389,7 @@ body {
     z-index: 2001;
 }
 
-/* --- 10. PROCESS OVERLAY (ZIP SPINNER) --- */
+/* --- 10. SPINNER --- */
 #process-overlay {
     position: fixed;
     inset: 0;
@@ -416,7 +420,7 @@ body {
     100% { transform: rotate(360deg); }
 }
 
-/* --- 11. FLASH EFFECT --- */
+/* --- 11. FLASH --- */
 #flash-overlay {
   position: fixed; 
   inset: 0; 
